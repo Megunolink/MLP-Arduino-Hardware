@@ -12,7 +12,7 @@ public:
 
   void begin(unsigned long uBaudRate);
 
-  void EnableEnhancedFeatures();
+  void EnableTransmitter(bool bEnable);
 
   enum TransmitError
   {
@@ -30,6 +30,7 @@ public:
   virtual size_t write(uint8_t uData);
 
 private:
+  void EnableEnhancedFeatures();
   void Select(bool bSelect);
   uint8_t ReadRegister(uint8_t uRegister);
   void WriteRegister(uint8_t uRegister, uint8_t uData);
@@ -43,6 +44,7 @@ private:
 
   // Timeout for sending data. If 0, no timeout occurs. 
   uint16_t m_uTransmitTimeout;
+  bool m_bTransmitterEnabled;
 
   TransmitError m_LastTxError; 
 

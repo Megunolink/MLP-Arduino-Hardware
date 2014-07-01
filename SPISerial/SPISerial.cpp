@@ -19,6 +19,7 @@ SPISerial::SPISerial( uint8_t uChipSelectPin, uint8_t uInterruptPin )
 {
   m_uTransmitTimeout = 0; 
   m_LastTxError = TxErr_None;
+  m_bTransmitterEnabled = true; 
 }
 
 
@@ -46,8 +47,6 @@ void SPISerial::begin( unsigned long uBaudRate )
   WriteRegister(REG_IO_CONTROL, IOCTRL_SW_RESET);
   delay(50); // give a little time for the reset. 
 
-  // Configure interrupts.
-  WriteRegister(REG_INTERRUPT_ENABLE, IER_RX_FIFO_THRESHOLD);
 
   // Configure UART baud rate, parity, stop bits, bits in a word... 
   uint32_t uDivider = (SPISER_XTAL_FREQ / 16) / uBaudRate;
@@ -55,11 +54,15 @@ void SPISerial::begin( unsigned long uBaudRate )
   WriteRegister(REG_LINE_CONTROL, LCR_EN_DIVISOR_LATCH | LCR_NO_PARITY | LCR_8_BIT_WORD_1_STOP); // latches divider. 
   WriteRegister(REGS_DIVIDER_LOW, uDivider & 0xff);
   WriteRegister(REGS_DIVIDER_HIGH, (uDivider >> 8) & 0xff);
-  
+
   // Configure fifos.
-  
+
   // Turn on enhanced mode in line control so we can turn on advanced features. 
   EnableEnhancedFeatures();
+
+  // Configure interrupts.
+  WriteRegister(REG_INTERRUPT_ENABLE, IER_RX_FIFO_THRESHOLD);
+
   WriteRegister(REG_MODEM_CONTROL, MCREH_DIVIDE_BY_1 | MCREH_EN_FIFO_TRIGGER);
   WriteRegister(REG_FIFO_CONTROL, FCR_RX_TRIGGER_56_CHAR | 
     FCR_RESET_TX_FIFO | FCR_RESET_RX_FIFO | FCR_ENABLE_FIFOS);
@@ -108,9 +111,12 @@ void SPISerial::flush()
 
 size_t SPISerial::write( uint8_t uData)
 {
+  if (!m_bTransmitterEnabled)
+    EnableTransmitter(true);
+
   if (m_LastTxError != TxErr_None)
     return 0; 
-  
+
   uint32_t uStartTime = millis();
   bool bTimeout; 
   uint8_t uLevel;
@@ -197,4 +203,19 @@ void SPISerial::InterruptHandler()
     }
   }
 }
+
+void SPISerial::EnableTransmitter( bool bEnable )
+{
+  if (bEnable != m_bTransmitterEnabled)
+  {
+    uint8_t uValue = LCR_NO_PARITY | LCR_8_BIT_WORD_1_STOP;
+    if (!bEnable)
+      uValue |= LCR_TX_BREAK;
+    WriteRegister(REG_LINE_CONTROL, uValue);
+    m_bTransmitterEnabled = bEnable;
+  }
+  Serial.print("Enable transmitter = ");
+  Serial.println(m_bTransmitterEnabled);
+}
+
 

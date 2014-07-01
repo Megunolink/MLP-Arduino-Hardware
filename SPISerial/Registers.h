@@ -9,6 +9,7 @@
 #define REG_INTERRUPT_ENABLE 0x01 // IER
 #define REG_SIGNALED_INTERRUPT 0x02 // IIR
 #define REG_RX_LEVEL 0x09 // RXLVL
+#define REG_EXTRA_FEATURES_CONTROL 0x0f // EFCR. 
 
 // Special register only avalabile when LCR[7] == 1
 #define REGS_DIVIDER_LOW 0x00  
@@ -56,8 +57,11 @@
 // Interrupt enable data
 #define IER_RX_FIFO_THRESHOLD 0x01 // Data in rx fifo. 
 #define IER_TX_FIFO_THRESHOLD 0x02 // Tx fifo needs more data
+#define IER_EN_SLEEP_MODE 0x10 // Requires advanced features to be enabled. 
 #define IER_RX_STATUS 0x04
 
 // Interrupt signal data
 #define IIR_MASK 0x3f
 #define IIR_RX_FIFO_THRESHOLD 0x04
+
+#define EFCR_TXDISABLE 0x04
