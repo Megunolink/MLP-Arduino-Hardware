@@ -131,7 +131,7 @@ size_t SPISerial::write( uint8_t uData)
   if (bTimeout)
   {
     m_LastTxError = TxErr_Timeout;
-    Serial.println("Timeout");
+    Serial.println(F("Timeout"));
     return 0; 
   }
 
@@ -206,6 +206,7 @@ void SPISerial::InterruptHandler()
 
 void SPISerial::EnableTransmitter( bool bEnable )
 {
+#if 0
   if (bEnable != m_bTransmitterEnabled)
   {
     uint8_t uValue = LCR_NO_PARITY | LCR_8_BIT_WORD_1_STOP;
@@ -214,8 +215,9 @@ void SPISerial::EnableTransmitter( bool bEnable )
     WriteRegister(REG_LINE_CONTROL, uValue);
     m_bTransmitterEnabled = bEnable;
   }
-  Serial.print("Enable transmitter = ");
+  Serial.print(F("Enable transmitter = "));
   Serial.println(m_bTransmitterEnabled);
+#endif
 }
 
 
