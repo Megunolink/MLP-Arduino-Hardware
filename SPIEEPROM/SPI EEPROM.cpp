@@ -1,6 +1,5 @@
 #include "SPI EEPROM.h"
 #include "SPI/SPI.h"
-#include "Vendor/MLP/ArduinoTimer.h"
 #include "avr/crc16.h"
 #include "avr/wdt.h"
 
@@ -129,7 +128,7 @@ void SPI_EEPROM::Select( bool bSelect )
 void SPI_EEPROM::WaitForWriteCompletion()
 {
   uint8_t uStatus;
-  ArduinoTimer Timer(true);
+  uint32_t uStartTime = millis();
 
   uint8_t uSREGEntry = SREG;
   cli();
@@ -138,7 +137,8 @@ void SPI_EEPROM::WaitForWriteCompletion()
   do 
   {
     uStatus = SPI.transfer(0);
-  } while ((uStatus & 0x01) && !Timer.TimePassed_Milliseconds(1000));
+  } while ((uStatus & 0x01) && ((millis() - uStartTime) < 1000));
+
   Select(false);
   SREG = uSREGEntry;
 #if 0
