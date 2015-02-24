@@ -6,11 +6,16 @@
 // Op-codes for eeprom. 
 #define OP_WRITE 2 // Writing data to memory
 #define OP_READ 3  // Reading data from device memory. 
+#define OP_ID_WRITE 0x82 // Write to id page
+#define OP_ID_READ 0x83  // Read from id page. 
+
 #define OP_WRITE_ENABLE 6 // Enable writing data to the device. 
 #define OP_WRITE_DISABLE 4 // Disable writing data to the device
 #define OP_READ_STATUS_REG 5
 #define OP_WRITE_STATUS_REG 1
 
+// We wait until the eeprom has finished writing, but not forever. 
+#define MAX_COMPLETION_ITERATIONS 0xffff
 
 SPI_EEPROM::SPI_EEPROM(uint8_t uChipSelect /*= SS*/, uint8_t uWriteProtectPin, uint8_t uHoldPin)
   : c_uChipSelectPin(uChipSelect)
@@ -24,7 +29,52 @@ SPI_EEPROM::~SPI_EEPROM(void)
 {
 }
 
-void SPI_EEPROM::Write( uint32_t uAddress, const uint8_t *pData, uint8_t uDataSize )
+/* Verifies the eeprom is present and functional by reading magic bytes from the 
+identification region of the chip. If the bytes aren't found, writes the bytes, then
+tries to read them back (if bWriteMagicBytes is true). */
+bool SPI_EEPROM::CheckEeprom(bool bWriteMagicBytes /*= true*/)
+{
+  const static char MagicBytes[] PROGMEM = { "Dragonfly\0" };
+  uint8_t auRamMagicBytes[10]; // Must be length of magic bytes string (including null terminator)
+
+  // Read magic bytes to ram. 
+  for(int iByte = 0; iByte < sizeof(auRamMagicBytes); ++iByte)
+  {
+    uint8_t uByte = pgm_read_byte_far(MagicBytes + iByte);
+    auRamMagicBytes[iByte] = uByte;
+  }
+
+  if (IdSectionStartsWith(auRamMagicBytes, sizeof(auRamMagicBytes)))
+  {
+    return true; 
+  }
+
+  if (bWriteMagicBytes)
+    if (!WriteId(auRamMagicBytes, sizeof(auRamMagicBytes)))
+      return false; 
+
+  return IdSectionStartsWith(auRamMagicBytes, sizeof(auRamMagicBytes));
+}
+
+bool SPI_EEPROM::IdSectionStartsWith( uint8_t *puRamMagicBytes, uint8_t uMagicBytesLength )
+{
+  uint8_t auTestBuffer[uMagicBytesLength];
+
+  Read(0, auTestBuffer, sizeof(auTestBuffer), OP_ID_READ);
+  return memcmp(auTestBuffer, puRamMagicBytes, sizeof(auTestBuffer)) == 0;
+} 
+
+bool SPI_EEPROM::WriteId( uint8_t *puRamMagicBytes, uint8_t MagicBytesLength )
+{
+  return Write(0, puRamMagicBytes, MagicBytesLength, OP_ID_WRITE);
+}
+
+bool SPI_EEPROM::Write( uint32_t uAddress, const uint8_t *pData, uint32_t uDataSize )
+{
+  return Write(uAddress, pData, uDataSize, OP_WRITE);
+}
+
+bool SPI_EEPROM::Write( uint32_t uAddress, const uint8_t *pData, uint32_t uDataSize, uint8_t uInstruction )
 {
 
   Initialize();
@@ -47,7 +97,7 @@ void SPI_EEPROM::Write( uint32_t uAddress, const uint8_t *pData, uint8_t uDataSi
     Select(false);
 
     Select(true);
-    SPI.transfer(OP_WRITE);         // Initiate write to memory operation.
+    SPI.transfer(uInstruction);         // Initiate write to memory operation.
     SendAddress(uAddress);
     while (uPage == (uByteAddress & uPageMask) && uDataSize)
     {
@@ -57,19 +107,29 @@ void SPI_EEPROM::Write( uint32_t uAddress, const uint8_t *pData, uint8_t uDataSi
     }
     Select(false); // Also initiates write operation. 
     SREG = uSREGEntry;
-
-    WaitForWriteCompletion();
+    if (!WaitForWriteCompletion())
+    { 
+      Serial.println(F("EEPROM write error"));
+      return false; 
+    }
   }
+
+  return true; 
 }
 
-void SPI_EEPROM::Read( uint32_t uAddress, uint8_t *pData, uint8_t uDataSize )
+void SPI_EEPROM::Read( uint32_t uAddress, uint8_t *pData, uint32_t uDataSize )
+{
+  Read(uAddress, pData, uDataSize, OP_READ);
+}
+
+void SPI_EEPROM::Read( uint32_t uAddress, uint8_t *pData, uint32_t uDataSize, uint8_t uInstruction )
 {
   Initialize();
 
   uint8_t uSREGEntry = SREG;
   cli();
   Select(true);
-  SPI.transfer(OP_READ);
+  SPI.transfer(uInstruction);
   SendAddress(uAddress);
   while (uDataSize--)
   {
@@ -83,8 +143,6 @@ void SPI_EEPROM::Read( uint32_t uAddress, uint8_t *pData, uint8_t uDataSize )
 uint16_t SPI_EEPROM::CalculateChecksum( uint32_t uStartAddress, uint32_t uLength )
 {
   Initialize();
-  Serial.println(uStartAddress);
-  Serial.println(uLength);
   wdt_reset();
   uint16_t uChecksum = 0; 
   uint8_t uSREGEntry = SREG;
@@ -125,38 +183,30 @@ void SPI_EEPROM::Select( bool bSelect )
   digitalWrite(c_uChipSelectPin, bSelect ? LOW : HIGH);
 }
 
-void SPI_EEPROM::WaitForWriteCompletion()
+bool SPI_EEPROM::WaitForWriteCompletion()
 {
   uint8_t uStatus;
   uint32_t uStartTime = millis();
-
+  uint32_t uIterations = 0; 
   uint8_t uSREGEntry = SREG;
+
+
   cli();
   Select(true);
   SPI.transfer(OP_READ_STATUS_REG);
   do 
   {
     uStatus = SPI.transfer(0);
-  } while ((uStatus & 0x01) && ((millis() - uStartTime) < 1000));
 
+    // using loop counter to 'time-out' because millis time won't 
+    // function properly in here (interrupts are turned off). 
+    ++uIterations;
+
+  } while ((uStatus & 0x01) && uIterations < MAX_COMPLETION_ITERATIONS);
   Select(false);
   SREG = uSREGEntry;
-#if 0
-  do 
-  {
-    delay(2);
 
-    // Busy status is indicated by a 1 in bit 0 of the status register. 
-    uint8_t uSREGEntry = SREG;
-    cli();
-
-    Select(true);
-    uStatus = SPI.transfer(OP_READ_STATUS_REG);
-    Select(false);
-    SREG = uSREGEntry;
-
-  } while ((uStatus & 0x01) && !Timer.TimePassed_Milliseconds(1000));
-#endif
+  return uIterations < MAX_COMPLETION_ITERATIONS;
 }
 
 void SPI_EEPROM::SendAddress( uint32_t uAddress )
@@ -165,3 +215,4 @@ void SPI_EEPROM::SendAddress( uint32_t uAddress )
   SPI.transfer((uAddress >> 8) & 0xff);
   SPI.transfer((uAddress) & 0xff);
 }
+

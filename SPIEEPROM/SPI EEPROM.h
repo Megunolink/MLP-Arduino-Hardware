@@ -8,13 +8,14 @@
 #pragma once
 #include <Arduino.h>
 
-
 class SPI_EEPROM
 {
 private: 
   const uint8_t c_uChipSelectPin;
   const uint8_t c_uWriteProtectPin;
   const uint8_t c_uHoldPin;
+
+
 public:
   enum EConstants 
   { 
@@ -26,14 +27,20 @@ public:
   SPI_EEPROM(uint8_t uChipSelect, uint8_t uWriteProtectPin, uint8_t uHoldPin);
   ~SPI_EEPROM();
 
-  void Write(uint32_t uAddress, const uint8_t *pData, uint8_t uDataSize);
-  void Read(uint32_t uAddress, uint8_t *pData, uint8_t uDataSize);
+  bool CheckEeprom(bool bWriteMagicBytes = true);
+
+  bool Write(uint32_t uAddress, const uint8_t *pData, uint32_t uDataSize);
+  void Read(uint32_t uAddress, uint8_t *pData, uint32_t uDataSize);
   uint16_t CalculateChecksum(uint32_t uStartAddress, uint32_t uLength);
 private:
   void Initialize();
   void Select(bool bSelect);
-  void WaitForWriteCompletion();
+  bool WaitForWriteCompletion();
+  bool Write(uint32_t uAddress, const uint8_t *pData, uint32_t uDataSize, uint8_t uInstruction);
+  void Read(uint32_t uAddress, uint8_t *pData, uint32_t uDataSize, uint8_t uInstruction);
 
   void SendAddress(uint32_t uAddress);
+  bool IdSectionStartsWith( uint8_t *puRamMagicBytes, uint8_t MagicBytesLength );
+  bool WriteId( uint8_t *puRamMagicBytes, uint8_t MagicBytesLength );
 };
 
