@@ -40,7 +40,13 @@ bool SPI_EEPROM::CheckEeprom(bool bWriteMagicBytes /*= true*/)
   // Read magic bytes to ram. 
   for(int iByte = 0; iByte < sizeof(auRamMagicBytes); ++iByte)
   {
+#if defined(__AVR_ATmega2560__)
     uint8_t uByte = pgm_read_byte_far(MagicBytes + iByte);
+#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega328P__)
+    uint8_t uByte = pgm_read_byte_near(MagicBytes + iByte);
+#else
+#pragma error('unknown processor')
+#endif
     auRamMagicBytes[iByte] = uByte;
   }
 

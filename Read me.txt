@@ -1,0 +1,12 @@
+﻿To include this library file in an Arduino Program project, you'll need to use the Visual Studio Property Manager. 
+You can find the Property Manager in the View -> Other Windows menu. 
+
+To include this library in your Arduino program:
+1. Select the Arduino program's project in the Property Manager
+2. Click the "Add existing property sheet" on the Property Manager toolbar. 
+3. Browse to the library project and select the file named <library-project>.props
+
+Building the Arduino Program will also build the referenced libraries. The libraries will pick up the
+hardware settings (CPU, clock frequency etc) from the Arduino Program. This means if you have one 
+program targeting a Mega and another targeting the Uno, both can use the same Arduino Library project
+for common code. 
