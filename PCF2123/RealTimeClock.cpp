@@ -1,22 +1,24 @@
 #include "RealTimeClock.h"
 #include "SPI/SPI.h"
 
-#define RTC_00_Control1 0x00
-#define RTC_01_Control2 0x01
-#define RTC_02_Sec 0x02
-#define RTC_03_Min 0x03
-#define RTC_04_Hour 0x04
-#define RTC_05_Day 0x05
-#define RTC_06_Weekday 0x06
-#define RTC_07_Month 0x07
-#define RTC_08_Year 0x08
-#define RTC_09_AlarmMin 0x09
-#define RTC_0A_AlarmHour 0x0A
-#define RTC_0B_AlarmDay 0x0B
-#define RTC_0C_AlarmWeekday 0x0C
-#define RTC_0D_Offset 0x0D
-#define RTC_0E_TimerClkOut 0x0E
-#define RTC_0F_TimerCountDown 0x0F
+#define RTC_SUB_ADDRESS 0x10
+
+#define RTC_00_Control1       (RTC_SUB_ADDRESS | 0x00)
+#define RTC_01_Control2       (RTC_SUB_ADDRESS | 0x01)
+#define RTC_02_Sec            (RTC_SUB_ADDRESS | 0x02)
+#define RTC_03_Min            (RTC_SUB_ADDRESS | 0x03)
+#define RTC_04_Hour           (RTC_SUB_ADDRESS | 0x04)
+#define RTC_05_Day            (RTC_SUB_ADDRESS | 0x05)
+#define RTC_06_Weekday        (RTC_SUB_ADDRESS | 0x06)
+#define RTC_07_Month          (RTC_SUB_ADDRESS | 0x07)
+#define RTC_08_Year           (RTC_SUB_ADDRESS | 0x08)
+#define RTC_09_AlarmMin       (RTC_SUB_ADDRESS | 0x09)
+#define RTC_0A_AlarmHour      (RTC_SUB_ADDRESS | 0x0A)
+#define RTC_0B_AlarmDay       (RTC_SUB_ADDRESS | 0x0B)
+#define RTC_0C_AlarmWeekday   (RTC_SUB_ADDRESS | 0x0C)
+#define RTC_0D_Offset         (RTC_SUB_ADDRESS | 0x0D)
+#define RTC_0E_TimerClkOut    (RTC_SUB_ADDRESS | 0x0E)
+#define RTC_0F_TimerCountDown (RTC_SUB_ADDRESS | 0x0F)
 
 #define RTC_TIMER_CLKOUT_NONE 0x70
 #define RTC_TIMER_TE_ENABLE 0x08
@@ -31,9 +33,9 @@ static RealTimeClock *s_pInterruptHandler;
 
 RealTimeClock::RealTimeClock( uint8_t uChipSelectPin, uint8_t uInterruptPin /*= NO_INTERRUPT*/ )
 #if F_CPU < 16000000L 
-  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV8)
+  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV8, false)
 #else
-  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV16)
+  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV16, false)
 #endif 
   , c_uInterruptPin(uInterruptPin)
 {
