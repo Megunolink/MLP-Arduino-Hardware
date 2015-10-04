@@ -33,9 +33,9 @@ static RealTimeClock *s_pInterruptHandler;
 
 RealTimeClock::RealTimeClock( uint8_t uChipSelectPin, uint8_t uInterruptPin /*= NO_INTERRUPT*/ )
 #if F_CPU < 16000000L 
-  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV8, false)
+  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV8, false, 0x80, 0x80, 0)
 #else
-  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV16, false)
+  : m_SPI(uChipSelectPin, SPI_CLOCK_DIV16, false, 0x80, 0x80, 0)
 #endif 
   , c_uInterruptPin(uInterruptPin)
 {

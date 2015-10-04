@@ -12,8 +12,12 @@ namespace SharedSPI
     const uint8_t m_uChipSelectPin;
     const uint8_t m_uClockDivider;
     const bool m_bActiveLow;
+    const uint8_t m_uReadWriteMask;
+    const uint8_t m_uReadFlag;
+    const uint8_t m_uWriteFlag;
 
-    CSharedSPI(uint8_t uChipSelectPin, uint8_t uClockDivider, bool bActiveLow = true);
+    CSharedSPI(uint8_t uChipSelectPin, uint8_t uClockDivider, 
+      bool bActiveLow = true, uint8_t uReadWriteFlagMask = 0x80, uint8_t uReadFlag = 0, uint8_t uWriteFlag = 0x80);
     void Initialize() const;
 
     void Write(uint8_t uRegister, uint8_t uValue) const;

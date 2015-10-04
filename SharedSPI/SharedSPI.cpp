@@ -9,10 +9,19 @@ namespace SharedSPI
   // Last user of spi port. 
   CSharedSPI const * g_pLast = NULL;
 
-  CSharedSPI::CSharedSPI(uint8_t uChipSelectPin, uint8_t uClockDivider, bool bActiveLow /* = true */)
+  CSharedSPI::CSharedSPI(uint8_t uChipSelectPin
+    , uint8_t uClockDivider
+    , bool bActiveLow /* = true */
+    , uint8_t uReadWriteFlagMask /* = 0x80 */
+    , uint8_t uReadFlag /* = 0 */
+    , uint8_t uWriteFlag /* = 0x80 */
+    )
     : m_uChipSelectPin(uChipSelectPin)
     , m_uClockDivider(uClockDivider)
     , m_bActiveLow(bActiveLow)
+    , m_uReadWriteMask(uReadWriteFlagMask)
+    , m_uWriteFlag(uWriteFlag)
+    , m_uReadFlag(uReadFlag)
   {
     pinMode(uChipSelectPin, OUTPUT);
     DeselectDevice();
@@ -45,7 +54,7 @@ namespace SharedSPI
       Initialize();
 
     SelectDevice();
-    SPI.transfer(uRegister | SPI_WRITE_MASK); // Send the address with the write mask on
+    SPI.transfer((~m_uReadWriteMask & uRegister) | m_uWriteFlag); // Send the address with the write mask on
     SPI.transfer(uValue); // New value follows
     DeselectDevice();
 
@@ -63,7 +72,7 @@ namespace SharedSPI
     uint8_t uValue;
 
     SelectDevice();
-    SPI.transfer(uRegister & ~SPI_WRITE_MASK); // Send the address with the write mask off
+    SPI.transfer((~m_uReadWriteMask & uRegister) | m_uReadFlag); // Send the address with the write mask off
     uValue = SPI.transfer(0); // The written value is ignored, reg value is read
     DeselectDevice();
 
@@ -81,7 +90,7 @@ namespace SharedSPI
       Initialize();
 
     SelectDevice();
-    SPI.transfer(uFirstRegister | SPI_WRITE_MASK); // Send the start address with the write mask on
+    SPI.transfer((~m_uReadWriteMask & uFirstRegister) | m_uWriteFlag); // Send the start address with the write mask on
     while (uLength--)
       SPI.transfer(*puData++);
     DeselectDevice();
@@ -98,7 +107,7 @@ namespace SharedSPI
       Initialize();
 
     SelectDevice();
-    SPI.transfer(uFirstRegister & ~SPI_WRITE_MASK); // Send the start address with the write mask off
+    SPI.transfer((~m_uReadWriteMask & uFirstRegister) | m_uReadFlag); // Send the start address with the write mask off
     while (uLength--)
       *puData++ = SPI.transfer(0);
     DeselectDevice();
