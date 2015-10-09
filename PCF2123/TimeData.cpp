@@ -79,20 +79,28 @@ void PrintBCD(Print &rOutput, uint8_t uValue)
   rOutput.write(chOut);
 }
 
-void PrintTime( const TimeData &rTime, Print &rDestination /*= Serial*/ )
+void PrintDateTime( const TimeData &rTime, Print &rDestination /*= Serial*/ )
 {
+  PrintDate(rTime, rDestination);
+  rDestination.print(' ');
+  PrintTime(rTime, rDestination);
+}
 
+void PrintDate( const TimeData &rTime, Print &rDestination /*= Serial*/ )
+{
   rDestination.print("20");
   PrintBCD(rDestination, rTime.years);
   rDestination.print('-');
   PrintBCD(rDestination, rTime.months);
   rDestination.print('-');
   PrintBCD(rDestination, rTime.days);      
-  rDestination.print(' ');
+}
+
+void PrintTime(const TimeData &rTime, Print &rDestination /*= Serial*/ )
+{
   PrintBCD(rDestination, rTime.hours);
   rDestination.print(':');
   PrintBCD(rDestination, rTime.minutes);
   rDestination.print(':');
   PrintBCD(rDestination, rTime.seconds);
 }
-

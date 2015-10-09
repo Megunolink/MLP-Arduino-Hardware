@@ -27,4 +27,6 @@ struct TimeData
 uint8_t Decimal2BCD(uint8_t uDecimalValue);
 uint8_t BCD2Decimal(uint8_t uBDCValue);
 
+void PrintDateTime(const TimeData &Time, Print& rDestination = Serial);
+void PrintDate(const TimeData &Time, Print& rDestination = Serial);
 void PrintTime(const TimeData &Time, Print& rDestination = Serial);
