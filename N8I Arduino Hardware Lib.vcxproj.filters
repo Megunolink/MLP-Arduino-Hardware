@@ -44,6 +44,21 @@
     <ClInclude Include="SharedSPI\SharedSPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MMA845x\Accelerometer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MMA845x\Registers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MMA845x\TransientConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MMA845x\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="I2C\I2C.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SPISerial\SPISerial.cpp">
@@ -59,6 +74,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SharedSPI\SharedSPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MMA845x\Accelerometer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MMA845x\TransientConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="I2C\I2C.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

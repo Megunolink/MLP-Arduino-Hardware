@@ -110,6 +110,10 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="I2C\I2C.h" />
+    <ClInclude Include="MMA845x\Accelerometer.h" />
+    <ClInclude Include="MMA845x\Config.h" />
+    <ClInclude Include="MMA845x\Registers.h" />
     <ClInclude Include="PCF2123\RealTimeClock.h" />
     <ClInclude Include="PCF2123\TimeData.h" />
     <ClInclude Include="SharedSPI\SharedSPI.h" />
@@ -117,13 +121,17 @@
     <ClInclude Include="SPISerial\CircularBuffer.h" />
     <ClInclude Include="SPISerial\Registers.h" />
     <ClInclude Include="SPISerial\SPISerial.h" />
+    <ClInclude Include="MMA845x\TransientConfig.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="I2C\I2C.cpp" />
+    <ClCompile Include="MMA845x\Accelerometer.cpp" />
     <ClCompile Include="PCF2123\RealTimeClock.cpp" />
     <ClCompile Include="PCF2123\TimeData.cpp" />
     <ClCompile Include="SharedSPI\SharedSPI.cpp" />
     <ClCompile Include="SPIEEPROM\SPI EEPROM.cpp" />
     <ClCompile Include="SPISerial\SPISerial.cpp" />
+    <ClCompile Include="MMA845x\TransientConfig.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
